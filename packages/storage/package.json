@@ -1,0 +1,9 @@
+{
+  "name": "@mantle/storage",
+  "version": "0.0.0",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "dependencies": {
+    "dexie": "^4.2.1"
+  }
+}

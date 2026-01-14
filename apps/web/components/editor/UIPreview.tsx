@@ -289,32 +289,69 @@ function generatePreviewHTML(code: string): string {
         window.http = () => ({});
         window.getDefaultConfig = () => ({});
         
-        // Mock lucide-react icons
-        const createIcon = (name) => ({ size = 24, className = '' }) => 
-            React.createElement('span', { className: className + ' inline-block', style: { width: size, height: size } }, '');
-        window.Wallet = createIcon('Wallet');
-        window.ArrowRight = createIcon('ArrowRight');
-        window.Check = createIcon('Check');
-        window.X = createIcon('X');
-        window.Loader2 = createIcon('Loader2');
-        window.Copy = createIcon('Copy');
-        window.ExternalLink = createIcon('ExternalLink');
-        window.ChevronDown = createIcon('ChevronDown');
-        window.ChevronUp = createIcon('ChevronUp');
-        window.Plus = createIcon('Plus');
-        window.Minus = createIcon('Minus');
-        window.RefreshCw = createIcon('RefreshCw');
-        window.Send = createIcon('Send');
-        window.Coins = createIcon('Coins');
-        window.Image = createIcon('Image');
-        window.Users = createIcon('Users');
-        window.Vote = createIcon('Vote');
-        window.Lock = createIcon('Lock');
-        window.Unlock = createIcon('Unlock');
-        window.TrendingUp = createIcon('TrendingUp');
-        window.Clock = createIcon('Clock');
-        window.AlertCircle = createIcon('AlertCircle');
-        window.Info = createIcon('Info');
+        // Mock lucide-react icons - create SVG-based icons for better visuals
+        const createIcon = (pathD) => ({ size = 24, className = '' }) => 
+            React.createElement('svg', { 
+                width: size, 
+                height: size, 
+                viewBox: '0 0 24 24', 
+                fill: 'none', 
+                stroke: 'currentColor', 
+                strokeWidth: 2, 
+                strokeLinecap: 'round', 
+                strokeLinejoin: 'round',
+                className: className 
+            }, React.createElement('path', { d: pathD }));
+        
+        // Define icons with actual SVG paths for visual representation
+        window.Wallet = createIcon('M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1');
+        window.ArrowRight = createIcon('M5 12h14M12 5l7 7-7 7');
+        window.Check = createIcon('M20 6L9 17l-5-5');
+        window.X = createIcon('M18 6L6 18M6 6l12 12');
+        window.Loader2 = createIcon('M21 12a9 9 0 1 1-6.219-8.56');
+        window.Copy = createIcon('M8 4v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7.242a2 2 0 0 0-.602-1.43L16.083 2.57A2 2 0 0 0 14.685 2H10a2 2 0 0 0-2 2z M16 18v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2');
+        window.ExternalLink = createIcon('M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6 M15 3h6v6 M10 14L21 3');
+        window.ChevronDown = createIcon('M6 9l6 6 6-6');
+        window.ChevronUp = createIcon('M18 15l-6-6-6 6');
+        window.Plus = createIcon('M12 5v14M5 12h14');
+        window.Minus = createIcon('M5 12h14');
+        window.RefreshCw = createIcon('M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5 M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16 M21 21v-5h-5');
+        window.Send = createIcon('M22 2L11 13 M22 2l-7 20-4-9-9-4 20-7z');
+        window.Coins = createIcon('M12 12m-8 0a8 8 0 1 0 16 0a8 8 0 1 0 -16 0');
+        window.Image = createIcon('M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z M8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M21 15l-5-5L5 21');
+        window.Users = createIcon('M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75 M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8z');
+        window.Vote = createIcon('M22 10v6M2 10l10-5 10 5-10 5z M6 12v5c3 3 9 3 12 0v-5');
+        window.Lock = createIcon('M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2z M7 11V7a5 5 0 0 1 10 0v4');
+        window.Unlock = createIcon('M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2z M7 11V7a5 5 0 0 1 9.9-1');
+        window.TrendingUp = createIcon('M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6');
+        window.Clock = createIcon('M12 12m-10 0a10 10 0 1 0 20 0a10 10 0 1 0 -20 0 M12 6v6l4 2');
+        window.AlertCircle = createIcon('M12 12m-10 0a10 10 0 1 0 20 0a10 10 0 1 0 -20 0 M12 8v4 M12 16h.01');
+        window.Info = createIcon('M12 12m-10 0a10 10 0 1 0 20 0a10 10 0 1 0 -20 0 M12 16v-4 M12 8h.01');
+        
+        // Additional commonly used icons
+        window.Settings = createIcon('M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0 M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z');
+        window.Home = createIcon('M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10');
+        window.Search = createIcon('M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z');
+        window.Menu = createIcon('M3 12h18M3 6h18M3 18h18');
+        window.ArrowLeft = createIcon('M19 12H5M12 19l-7-7 7-7');
+        window.ArrowUp = createIcon('M12 19V5M5 12l7-7 7 7');
+        window.ArrowDown = createIcon('M12 5v14M19 12l-7 7-7-7');
+        window.Heart = createIcon('M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z');
+        window.Star = createIcon('M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z');
+        window.Trash = createIcon('M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2');
+        window.Edit = createIcon('M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z');
+        window.Eye = createIcon('M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0');
+        window.EyeOff = createIcon('M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24 M1 1l22 22');
+        window.Download = createIcon('M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3');
+        window.Upload = createIcon('M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M17 8l-5-5-5 5 M12 3v12');
+        window.Link = createIcon('M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71 M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71');
+        window.Shield = createIcon('M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z');
+        window.Zap = createIcon('M13 2L3 14h9l-1 8 10-12h-9l1-8z');
+        window.Activity = createIcon('M22 12h-4l-3 9L9 3l-3 9H2');
+        window.Gift = createIcon('M20 12v10H4V12 M2 7h20v5H2z M12 22V7 M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z');
+        window.Award = createIcon('M12 15l-2 5-1-3-3 1 2-5 M12 15l2 5 1-3 3 1-2-5 M12 12m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0');
+        window.Percent = createIcon('M19 5L5 19 M6.5 6.5m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0 M17.5 17.5m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0');
+        window.DollarSign = createIcon('M12 1v22 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6');
     <\/script>
     
     <script type="text/babel" data-presets="react,typescript">
@@ -345,14 +382,53 @@ function generatePreviewHTML(code: string): string {
         const http = window.http;
         const getDefaultConfig = window.getDefaultConfig;
         
-        // Icons
+        // Icons - all available globally
         const Wallet = window.Wallet;
         const ArrowRight = window.ArrowRight;
+        const ArrowLeft = window.ArrowLeft;
+        const ArrowUp = window.ArrowUp;
+        const ArrowDown = window.ArrowDown;
         const Check = window.Check;
         const X = window.X;
         const Loader2 = window.Loader2;
         const Copy = window.Copy;
         const ExternalLink = window.ExternalLink;
+        const ChevronDown = window.ChevronDown;
+        const ChevronUp = window.ChevronUp;
+        const Plus = window.Plus;
+        const Minus = window.Minus;
+        const RefreshCw = window.RefreshCw;
+        const Send = window.Send;
+        const Coins = window.Coins;
+        const Image = window.Image;
+        const Users = window.Users;
+        const Vote = window.Vote;
+        const Lock = window.Lock;
+        const Unlock = window.Unlock;
+        const TrendingUp = window.TrendingUp;
+        const Clock = window.Clock;
+        const AlertCircle = window.AlertCircle;
+        const Info = window.Info;
+        const Settings = window.Settings;
+        const Home = window.Home;
+        const Search = window.Search;
+        const Menu = window.Menu;
+        const Heart = window.Heart;
+        const Star = window.Star;
+        const Trash = window.Trash;
+        const Edit = window.Edit;
+        const Eye = window.Eye;
+        const EyeOff = window.EyeOff;
+        const Download = window.Download;
+        const Upload = window.Upload;
+        const Link = window.Link;
+        const Shield = window.Shield;
+        const Zap = window.Zap;
+        const Activity = window.Activity;
+        const Gift = window.Gift;
+        const Award = window.Award;
+        const Percent = window.Percent;
+        const DollarSign = window.DollarSign;
         
         try {
             // User's generated code

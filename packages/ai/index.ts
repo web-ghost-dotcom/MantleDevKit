@@ -139,41 +139,74 @@ CRITICAL RULES:
 3. Use plain JavaScript (NOT TypeScript) - NO type annotations, NO generics, NO interfaces
 4. Use Tailwind CSS for styling
 5. Make it work with the other components in the plan
-6. Use consistent naming and styling based on the theme
+6. ONLY use the APIs listed below - nothing else is available
 
 JAVASCRIPT ONLY - DO NOT USE:
 - Type annotations like : string, : number, : boolean
 - Generic types like useState<string> - just use useState
 - Interface or type declarations
 - 'as' type assertions
+- import or export statements
 
-AVAILABLE (already in scope, don't import):
-- React: useState, useEffect, useMemo, useCallback
-- wagmi: useAccount, useBalance, useReadContract, useWriteContract
-- viem: formatEther, parseEther
-- motion (from framer-motion) - USE AS JSX COMPONENTS ONLY: <motion.div initial={{...}} animate={{...}}>
+=== AVAILABLE APIs (USE ONLY THESE) ===
 
-FRAMER-MOTION USAGE - CORRECT:
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>content</motion.div>
-  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Click</motion.button>
+REACT (available globally):
+- useState, useEffect, useMemo, useCallback, useRef
 
-FRAMER-MOTION USAGE - WRONG (DO NOT DO THIS):
-  motion.div.initial({...}) // WRONG - motion.div is a component, not a function chain
-  motion.div({ initial: {...} }) // WRONG - use JSX syntax instead
+WAGMI HOOKS (available globally):
+- useAccount() => { address, isConnected, isConnecting, isDisconnected, status }
+- useBalance(config?) => { data: { formatted, symbol, value, decimals }, isLoading, isError, refetch }
+- useReadContract({ abi, address, functionName, args? }) => { data, isLoading, isError, refetch }
+- useWriteContract() => { writeContract, writeContractAsync, isPending, isSuccess, isError, reset }
+- useWaitForTransactionReceipt({ hash? }) => { isLoading, isSuccess, isError, data }
+- useChainId() => number
+- useConnect() => { connect, connectors, isPending }
+- useDisconnect() => { disconnect, isPending }
+- useSwitchChain() => { switchChain, isPending, chains }
+
+VIEM FUNCTIONS (available globally):
+- formatEther(bigint) => string
+- parseEther(string) => bigint
+- formatUnits(bigint, decimals) => string
+- parseUnits(string, decimals) => bigint
+
+FRAMER-MOTION (available globally):
+- motion.div, motion.button, motion.span, motion.p, motion.h1, motion.h2, motion.h3
+- motion.section, motion.header, motion.footer, motion.nav, motion.main
+- motion.ul, motion.li, motion.a, motion.form, motion.input, motion.img
+- AnimatePresence
+- Props: initial, animate, exit, transition, whileHover, whileTap, variants, className, style, onClick
+
+USAGE: <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="...">content</motion.div>
+DO NOT: motion.div.initial() or motion.div({ initial: {} }) - these are WRONG
+
+ICONS (available globally as React components):
+- Wallet, ArrowRight, ArrowLeft, ArrowUp, ArrowDown, Check, X, Loader2, Copy, ExternalLink
+- ChevronDown, ChevronUp, Plus, Minus, RefreshCw, Send, Coins, DollarSign, Percent
+- Image, Users, Vote, Lock, Unlock, TrendingUp, Clock, AlertCircle, Info
+- Settings, Home, Search, Menu, Heart, Star, Trash, Edit, Eye, EyeOff
+- Download, Upload, Link, Shield, Zap, Activity, Gift, Award
+
+USAGE: <Wallet size={24} className="text-white" />
+DO NOT use any other icon names - only these are available.
+
+GLOBAL CONSTANTS:
+- CONTRACT_ABI (array)
+- CONTRACT_ADDRESS (string)
+
+=== END AVAILABLE APIs ===
 
 THEME: ${fullPlan.theme.style} style with ${fullPlan.theme.primary} as primary color
 
-CONTRACT_ABI and CONTRACT_ADDRESS are already defined globally.
-
 ${previousComponents.length > 0 ? `
-ALREADY GENERATED COMPONENTS (you can reference these):
+ALREADY GENERATED COMPONENTS (reference by name):
 ${previousComponents.map(c => `- ${c.name}`).join('\n')}
 ` : ''}
 
 Return ONLY a JSON object:
 {
   "name": "${componentPlan.name}",
-  "code": "// Component code here - PLAIN JAVASCRIPT ONLY"
+  "code": "// Component code here - PLAIN JAVASCRIPT ONLY, using ONLY the APIs listed above"
 }`;
 
         const prompt = `Generate the "${componentPlan.name}" component.
@@ -200,33 +233,54 @@ Contract functions available: ${abi.filter(x => x.type === 'function').map(f => 
 
 Create a single App.jsx file (PLAIN JAVASCRIPT, NOT TYPESCRIPT).
 
-CRITICAL - DO NOT USE IMPORT STATEMENTS:
-- DO NOT write any import statements
-- All dependencies (React, useState, useEffect, wagmi hooks, motion) are already available globally
-- Just use them directly: useState, useEffect, useAccount, useBalance, etc.
-
 STRUCTURE:
 1. Define CONTRACT_ABI as a const (the ABI array)
 2. Define CONTRACT_ADDRESS as a const (the address string)
-3. Define all component functions
+3. Define all component functions (copy from provided components, fix any issues)
 4. Define the main App function that uses the components
-5. At the end, just have: // App is the main component
+5. End with comment: // App is the main component
 
-CRITICAL - JAVASCRIPT ONLY:
-- NO import statements at all
+CRITICAL RULES:
+- NO import statements
 - NO export statements
-- NO TypeScript type annotations
-- NO generic types
-- Use plain JavaScript syntax only
+- NO TypeScript (no type annotations, no generics, no interfaces)
+- ONLY use the APIs listed below
 
-FRAMER-MOTION - USE JSX SYNTAX ONLY:
-CORRECT: <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>content</motion.div>
-WRONG: motion.div.initial({...}) or motion.div({ initial: {...} })
-motion.div, motion.button etc. are React components, use them with JSX angle brackets.
+=== AVAILABLE APIs (USE ONLY THESE) ===
 
-The code will run in an environment where React, wagmi hooks, viem functions, and framer-motion are already available globally.
+REACT: useState, useEffect, useMemo, useCallback, useRef
 
-Return ONLY the raw JavaScript code. No JSON, no markdown, no imports, no exports.`;
+WAGMI HOOKS:
+- useAccount() => { address, isConnected, isConnecting, isDisconnected }
+- useBalance(config?) => { data: { formatted, symbol, value, decimals }, isLoading, refetch }
+- useReadContract({ abi, address, functionName, args? }) => { data, isLoading, isError, refetch }
+- useWriteContract() => { writeContract, writeContractAsync, isPending, isSuccess, reset }
+- useWaitForTransactionReceipt({ hash? }) => { isLoading, isSuccess, data }
+- useChainId() => number
+- useConnect() => { connect, connectors, isPending }
+- useDisconnect() => { disconnect }
+- useSwitchChain() => { switchChain, chains }
+
+VIEM: formatEther, parseEther, formatUnits, parseUnits
+
+FRAMER-MOTION:
+- motion.div, motion.button, motion.span, motion.p, motion.h1, motion.h2, motion.h3
+- motion.section, motion.header, motion.footer, motion.nav, motion.main, motion.ul, motion.li
+- AnimatePresence
+- USE JSX: <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>content</motion.div>
+- NEVER: motion.div.initial() or motion.div({ initial: {} })
+
+ICONS (React components - ONLY use these names):
+Wallet, ArrowRight, ArrowLeft, ArrowUp, ArrowDown, Check, X, Loader2, Copy, ExternalLink,
+ChevronDown, ChevronUp, Plus, Minus, RefreshCw, Send, Coins, DollarSign, Percent,
+Image, Users, Vote, Lock, Unlock, TrendingUp, Clock, AlertCircle, Info,
+Settings, Home, Search, Menu, Heart, Star, Trash, Edit, Eye, EyeOff,
+Download, Upload, Link, Shield, Zap, Activity, Gift, Award
+USAGE: <Wallet size={24} className="text-white" />
+
+=== END AVAILABLE APIs ===
+
+Return ONLY raw JavaScript code. No JSON wrapper, no markdown code blocks.`;
 
         const prompt = `Assemble these components into a complete App.tsx:
 

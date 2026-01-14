@@ -151,7 +151,15 @@ AVAILABLE (already in scope, don't import):
 - React: useState, useEffect, useMemo, useCallback
 - wagmi: useAccount, useBalance, useReadContract, useWriteContract
 - viem: formatEther, parseEther
-- motion (from framer-motion)
+- motion (from framer-motion) - USE AS JSX COMPONENTS ONLY: <motion.div initial={{...}} animate={{...}}>
+
+FRAMER-MOTION USAGE - CORRECT:
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>content</motion.div>
+  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Click</motion.button>
+
+FRAMER-MOTION USAGE - WRONG (DO NOT DO THIS):
+  motion.div.initial({...}) // WRONG - motion.div is a component, not a function chain
+  motion.div({ initial: {...} }) // WRONG - use JSX syntax instead
 
 THEME: ${fullPlan.theme.style} style with ${fullPlan.theme.primary} as primary color
 
@@ -195,7 +203,7 @@ Create a single App.jsx file (PLAIN JAVASCRIPT, NOT TYPESCRIPT).
 CRITICAL - DO NOT USE IMPORT STATEMENTS:
 - DO NOT write any import statements
 - All dependencies (React, useState, useEffect, wagmi hooks, motion) are already available globally
-- Just use them directly: useState, useEffect, useAccount, useBalance, motion.div, etc.
+- Just use them directly: useState, useEffect, useAccount, useBalance, etc.
 
 STRUCTURE:
 1. Define CONTRACT_ABI as a const (the ABI array)
@@ -210,6 +218,11 @@ CRITICAL - JAVASCRIPT ONLY:
 - NO TypeScript type annotations
 - NO generic types
 - Use plain JavaScript syntax only
+
+FRAMER-MOTION - USE JSX SYNTAX ONLY:
+CORRECT: <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>content</motion.div>
+WRONG: motion.div.initial({...}) or motion.div({ initial: {...} })
+motion.div, motion.button etc. are React components, use them with JSX angle brackets.
 
 The code will run in an environment where React, wagmi hooks, viem functions, and framer-motion are already available globally.
 

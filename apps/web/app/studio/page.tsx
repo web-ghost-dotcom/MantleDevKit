@@ -1224,6 +1224,17 @@ describe("${result?.name || 'Contract'}", function () {
                                                 contractAddress={deployedAddress || undefined}
                                                 isGenerating={isGeneratingUI}
                                                 progress={uiGenerationProgress}
+                                                onCodeFixed={(fixedCode) => {
+                                                    setGeneratedUI(fixedCode);
+                                                    log('info', 'Syntax error auto-fixed!');
+                                                }}
+                                                onFixSyntaxError={async (codeToFix, errorMessage, errorLine) => {
+                                                    const ai = getAIClient();
+                                                    if (!ai) {
+                                                        throw new Error('AI client not available');
+                                                    }
+                                                    return await ai.fixSyntaxError(codeToFix, errorMessage, errorLine);
+                                                }}
                                             />
                                         )}
                                         {activeRightTab === 'interact' && deployedAddress && result?.abi && (

@@ -559,4 +559,58 @@ Create the final assembled App.tsx file.`;
             throw new Error("AI response was not valid JSON. Please try again.");
         }
     }
+
+    /**
+     * Fix syntax errors in generated code
+     */
+    async fixSyntaxError(
+        code: string,
+        errorMessage: string,
+        errorLine?: number
+    ): Promise<string> {
+        const systemPrompt = `You are a JavaScript/React code fixer. Fix syntax errors in the provided code.
+
+CRITICAL RULES:
+1. Return ONLY the fixed code - no explanations, no markdown, no JSON wrapper
+2. Keep all functionality intact - only fix syntax errors
+3. Use plain JavaScript (NO TypeScript)
+4. Ensure proper JSX syntax
+5. Check for missing commas, brackets, parentheses, semicolons
+6. Ensure all function/component definitions are complete
+
+AVAILABLE APIs (same as before):
+- React: useState, useEffect, useMemo, useCallback, useRef
+- wagmi hooks: useAccount, useBalance, useReadContract, useWriteContract, etc.
+- viem: formatEther, parseEther, formatUnits, parseUnits
+- motion components: motion.div, motion.button, etc. (use JSX syntax)
+- Icons: Wallet, ArrowRight, Check, X, Loader2, Copy, etc.
+
+Return ONLY the corrected code.`;
+
+        const prompt = `Fix this JavaScript/React code that has a syntax error:
+
+ERROR: ${errorMessage}
+${errorLine ? `ERROR LINE: ${errorLine}` : ''}
+
+CODE WITH ERROR:
+\`\`\`javascript
+${code}
+\`\`\`
+
+Fix the syntax error and return the corrected code.`;
+
+        try {
+            const fixedCode = await this.generateRaw(prompt, systemPrompt);
+            // Clean up any markdown if present
+            return fixedCode
+                .replace(/```javascript/g, '')
+                .replace(/```jsx/g, '')
+                .replace(/```typescript/g, '')
+                .replace(/```tsx/g, '')
+                .replace(/```/g, '')
+                .trim();
+        } catch (e: any) {
+            throw new Error(`Failed to fix syntax error: ${e.message}`);
+        }
+    }
 }

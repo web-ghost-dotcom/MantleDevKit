@@ -16,6 +16,8 @@ interface UIPreviewProps {
     contractAddress?: string;
     isGenerating?: boolean;
     progress?: UIGenerationProgress | null;
+    onCodeFixed?: (fixedCode: string) => void;
+    onFixSyntaxError?: (code: string, errorMessage: string, errorLine?: number) => Promise<string>;
 }
 
 type PreviewTab = 'preview' | 'code';
@@ -469,20 +471,53 @@ function generatePreviewHTML(code: string): string {
             }
         } catch (error) {
             console.error('Preview error:', error);
+            
+            // Extract error line number if available
+            const errorMatch = error.message.match(/(\d+):(\d+)/);
+            const errorLine = errorMatch ? parseInt(errorMatch[1]) : null;
+            
+            // Post error to parent window for auto-fix
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'PREVIEW_SYNTAX_ERROR',
+                    error: error.message,
+                    line: errorLine
+                }, '*');
+            }
+            
             document.getElementById('root').style.display = 'none';
             document.getElementById('error-display').style.display = 'block';
-            document.getElementById('error-message').textContent = error.message + '\\n\\nThis is a preview limitation. Download the code to run it in your project.';
+            document.getElementById('error-message').textContent = error.message + '\\n\\nAttempting to auto-fix...';
         }
+        
+        // Global error handler
+        window.addEventListener('error', (event) => {
+            if (event.error && event.error.message && event.error.message.includes('SyntaxError')) {
+                const errorMatch = event.error.message.match(/(\d+):(\d+)/);
+                const errorLine = errorMatch ? parseInt(errorMatch[1]) : null;
+                
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'PREVIEW_SYNTAX_ERROR',
+                        error: event.error.message,
+                        line: errorLine
+                    }, '*');
+                }
+            }
+        });
     <\/script>
 </body>
 </html>`;
 }
 
-export default function UIPreview({ code, abi, contractAddress, isGenerating, progress }: UIPreviewProps) {
+export default function UIPreview({ code, abi, contractAddress, isGenerating, progress, onCodeFixed, onFixSyntaxError }: UIPreviewProps) {
     const [activeTab, setActiveTab] = useState<PreviewTab>('preview');
     const [copied, setCopied] = useState(false);
     const [previewKey, setPreviewKey] = useState(0);
+    const [isFixingError, setIsFixingError] = useState(false);
+    const [fixAttempts, setFixAttempts] = useState(0);
     const iframeRef = useRef<HTMLIFrameElement>(null);
+    const lastErrorRef = useRef<string | null>(null);
 
     // Generate preview HTML
     const previewHTML = useMemo(() => {
@@ -505,6 +540,85 @@ export default function UIPreview({ code, abi, contractAddress, isGenerating, pr
             }
         };
     }, [previewUrl]);
+
+    // Listen for syntax errors from iframe and auto-fix
+    useEffect(() => {
+        const handleMessage = async (event: MessageEvent) => {
+            if (event.data?.type === 'PREVIEW_SYNTAX_ERROR' && code && !isFixingError && fixAttempts < 3) {
+                const errorMessage = event.data.error;
+                const errorLine = event.data.line;
+                
+                // Avoid fixing the same error multiple times
+                if (lastErrorRef.current === errorMessage) {
+                    return;
+                }
+                lastErrorRef.current = errorMessage;
+                
+                setIsFixingError(true);
+                setFixAttempts(prev => prev + 1);
+                
+                try {
+                    if (!onFixSyntaxError) {
+                        console.error('Syntax error fix function not available');
+                        setIsFixingError(false);
+                        return;
+                    }
+                    
+                    // Extract problematic code section if we have a line number
+                    let codeToFix = code;
+                    if (errorLine && errorLine > 0) {
+                        const lines = code.split('\n');
+                        const startLine = Math.max(0, errorLine - 10);
+                        const endLine = Math.min(lines.length, errorLine + 10);
+                        codeToFix = lines.slice(startLine, endLine).join('\n');
+                    }
+                    
+                    const fixedCode = await onFixSyntaxError(codeToFix, errorMessage, errorLine);
+                    
+                    // Replace the problematic section in the full code
+                    if (errorLine && errorLine > 0 && fixedCode !== codeToFix) {
+                        const lines = code.split('\n');
+                        const startLine = Math.max(0, errorLine - 10);
+                        const endLine = Math.min(lines.length, errorLine + 10);
+                        const newCode = [
+                            ...lines.slice(0, startLine),
+                            fixedCode,
+                            ...lines.slice(endLine)
+                        ].join('\n');
+                        
+                        if (onCodeFixed) {
+                            onCodeFixed(newCode);
+                        }
+                    } else if (fixedCode && fixedCode !== code) {
+                        // Replace entire code if we couldn't isolate the section
+                        if (onCodeFixed) {
+                            onCodeFixed(fixedCode);
+                        }
+                    }
+                    
+                    // Reset error tracking after a delay
+                    setTimeout(() => {
+                        lastErrorRef.current = null;
+                        setIsFixingError(false);
+                        setPreviewKey(k => k + 1); // Refresh preview
+                    }, 1000);
+                } catch (fixError: any) {
+                    console.error('Failed to auto-fix syntax error:', fixError);
+                    setIsFixingError(false);
+                    lastErrorRef.current = null;
+                }
+            }
+        };
+        
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [code, isFixingError, fixAttempts, onCodeFixed, onFixSyntaxError]);
+    
+    // Reset fix attempts when code changes
+    useEffect(() => {
+        setFixAttempts(0);
+        lastErrorRef.current = null;
+    }, [code]);
 
     const copyCode = async () => {
         if (!code) return;
@@ -741,7 +855,13 @@ export default function UIPreview({ code, abi, contractAddress, isGenerating, pr
             </div>
 
             {/* Preview Content */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden relative">
+                {isFixingError && (
+                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-purple-500/90 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg">
+                        <IconSpinner size={16} className="animate-spin" />
+                        <span className="text-sm font-bold">Auto-fixing syntax error...</span>
+                    </div>
+                )}
                 {activeTab === 'preview' ? (
                     <div className="h-full bg-gray-900">
                         {code && previewUrl ? (

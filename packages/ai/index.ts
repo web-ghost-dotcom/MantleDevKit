@@ -190,26 +190,30 @@ Contract functions available: ${abi.filter(x => x.type === 'function').map(f => 
     ): Promise<string> {
         const systemPrompt = `You are assembling a React dApp from pre-generated components.
 
-Create a single App.jsx file (PLAIN JAVASCRIPT, NOT TYPESCRIPT) that:
-1. Defines the CONTRACT_ABI and CONTRACT_ADDRESS constants at the top
-2. Includes ALL the component code inline (since this is a single-file output)
-3. Creates the main App component that uses all the other components
-4. Exports the App as default
+Create a single App.jsx file (PLAIN JAVASCRIPT, NOT TYPESCRIPT).
+
+CRITICAL - DO NOT USE IMPORT STATEMENTS:
+- DO NOT write any import statements
+- All dependencies (React, useState, useEffect, wagmi hooks, motion) are already available globally
+- Just use them directly: useState, useEffect, useAccount, useBalance, motion.div, etc.
+
+STRUCTURE:
+1. Define CONTRACT_ABI as a const (the ABI array)
+2. Define CONTRACT_ADDRESS as a const (the address string)
+3. Define all component functions
+4. Define the main App function that uses the components
+5. At the end, just have: // App is the main component
 
 CRITICAL - JAVASCRIPT ONLY:
-- NO TypeScript type annotations (: string, : number, etc.)
-- NO generic types (useState<T>, useRef<T>, etc.) - just useState, useRef
-- NO interface or type declarations
-- NO 'as' type assertions
+- NO import statements at all
+- NO export statements
+- NO TypeScript type annotations
+- NO generic types
 - Use plain JavaScript syntax only
 
-RULES:
-- Put all components in a single file
-- Add necessary imports at the top (React, wagmi, viem, framer-motion)
-- Make sure all components work together
-- The final output should be a complete, runnable React component in PLAIN JAVASCRIPT
+The code will run in an environment where React, wagmi hooks, viem functions, and framer-motion are already available globally.
 
-Return ONLY the raw JavaScript/React code. No JSON wrapper, no markdown.`;
+Return ONLY the raw JavaScript code. No JSON, no markdown, no imports, no exports.`;
 
         const prompt = `Assemble these components into a complete App.tsx:
 
@@ -228,8 +232,28 @@ Contract Address: ${contractAddress}
 Create the final assembled App.tsx file.`;
 
         const result = await this.generateRaw(prompt, systemPrompt);
-        // Clean up any markdown if present
-        return result.replace(/```typescript/g, '').replace(/```tsx/g, '').replace(/```/g, '').trim();
+        // Clean up markdown and imports
+        let cleanedResult = result
+            .replace(/```typescript/g, '')
+            .replace(/```javascript/g, '')
+            .replace(/```tsx/g, '')
+            .replace(/```jsx/g, '')
+            .replace(/```/g, '')
+            .trim();
+
+        // Remove any import statements that might have slipped through
+        cleanedResult = cleanedResult.replace(/^\s*import\s+[\s\S]*?from\s*['"][^'"]*['"]\s*;?\s*$/gm, '');
+        cleanedResult = cleanedResult.replace(/^\s*import\s*['"][^'"]*['"]\s*;?\s*$/gm, '');
+        cleanedResult = cleanedResult.replace(/^\s*import\s*\{[^}]*\}\s*from\s*['"][^'"]*['"]\s*;?\s*$/gm, '');
+
+        // Remove export statements
+        cleanedResult = cleanedResult.replace(/^export\s+default\s+/gm, '');
+        cleanedResult = cleanedResult.replace(/^export\s+/gm, '');
+
+        // Clean up extra newlines
+        cleanedResult = cleanedResult.replace(/\n{3,}/g, '\n\n').trim();
+
+        return cleanedResult;
     }
 
     /**
@@ -436,11 +460,36 @@ Create the final assembled App.tsx file.`;
     private parseResponse(text: string): any {
         try {
             // Clean up markdown code blocks if present
-            const cleanText = text.replace(/```json/g, "").replace(/```typescript/g, "").replace(/```/g, "").trim();
+            let cleanText = text;
+
+            // Remove markdown code fences with language tags
+            cleanText = cleanText.replace(/^```(?:json|typescript|javascript|tsx|jsx)?\s*\n?/gm, '');
+            cleanText = cleanText.replace(/\n?```\s*$/gm, '');
+            cleanText = cleanText.trim();
+
+            // Try to extract JSON if it's embedded in other text
+            const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                cleanText = jsonMatch[0];
+            }
+
             return JSON.parse(cleanText);
         } catch (e) {
-            console.error("Failed to parse AI response", text);
-            throw new Error("AI response was not valid JSON");
+            console.error("Failed to parse AI response:", text);
+
+            // Try one more approach: find JSON object in the response
+            try {
+                const jsonStart = text.indexOf('{');
+                const jsonEnd = text.lastIndexOf('}');
+                if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+                    const extracted = text.substring(jsonStart, jsonEnd + 1);
+                    return JSON.parse(extracted);
+                }
+            } catch {
+                // Final fallback failed
+            }
+
+            throw new Error("AI response was not valid JSON. Please try again.");
         }
     }
 }
